@@ -4,6 +4,7 @@ import { USERS_REPOSITORY } from './domain/users.repository.port';
 import { PrismaUsersRepository } from './infrastructure/prisma-users.repository';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
+import { UsersMessageController } from './users.message.controller';
 
 @Module({
   providers: [
@@ -15,7 +16,7 @@ import { UsersController } from './users.controller';
       useExisting: PrismaUsersRepository,
     },
   ],
-  controllers: [UsersController],
+  controllers: [UsersController, UsersMessageController],
   exports: [UsersService],
 })
 export class UsersModule {}
