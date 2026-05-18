@@ -1,10 +1,10 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
-import { PrismaClient } from '../../generated/prisma/users';
+import { PrismaClient } from '../../generated/prisma/auth';
 
 @Injectable()
-export class PrismaService
+export class AuthPrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
@@ -12,11 +12,11 @@ export class PrismaService
 
   constructor() {
     const connectionString =
-      process.env.USERS_DATABASE_URL ?? process.env.DATABASE_URL;
+      process.env.AUTH_DATABASE_URL ?? process.env.DATABASE_URL;
 
     if (!connectionString) {
       throw new Error(
-        'USERS_DATABASE_URL or DATABASE_URL is required for users Prisma runtime.',
+        'AUTH_DATABASE_URL or DATABASE_URL is required for auth Prisma runtime.',
       );
     }
 
