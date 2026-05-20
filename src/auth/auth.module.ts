@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { UsersModule } from '../users/users.module';
+import { UsersApplicationModule } from '../users/users-application.module';
 import { AuthController } from './auth.controller';
 import { AuthMessageController } from './auth.message.controller';
 import { AuthService } from './auth.service';
@@ -10,7 +10,7 @@ import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
-    UsersModule,
+    UsersApplicationModule,
     PassportModule,
     JwtModule.registerAsync({
       useFactory: () => {
