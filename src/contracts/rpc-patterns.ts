@@ -7,6 +7,7 @@ export const RpcPatterns = {
   users: {
     findAll: 'users.findAll',
     create: 'users.create',
+    findByEmailForAuth: 'users.findByEmailForAuth',
     getById: 'users.getById',
     getMyProfile: 'users.getMyProfile',
     updateMyProfile: 'users.updateMyProfile',

@@ -1,6 +1,6 @@
 # Tinder Backend
 
-Backend NestJS con Prisma 7, organizado por dominios de datos separados y preparado para migrar a microservicios.
+Backend NestJS con Prisma 7, organizado por dominios de datos separados y migrado a una base de arquitectura de microservicios TCP.
 
 ## Estado de la entrega
 
@@ -12,13 +12,15 @@ Esta entrega incluye:
 - clientes Prisma generados por dominio
 - runtime Nest usando cliente Prisma separado para `users`
 - entrypoints separados para `auth-service`, `users-service` y `gateway`
+- gateway HTTP como unica entrada publica para `auth` y `users`
+- `auth-service` comunicandose con `users-service` por RPC, sin importar directamente la capa de usuarios
 
 No incluye todavia:
 
 - persistencia real de sesiones en login/logout
 - refresh tokens
 - revocacion de sesiones por dispositivo
-- despliegue independiente por servicio
+- despliegue independiente por servicio en servidores separados
 
 ## Estructura Prisma
 
@@ -94,14 +96,24 @@ npm run prisma:migrate:status:auth
 npm run prisma:migrate:status:all
 ```
 
-## Preparacion para microservicios
+## Arquitectura de microservicios
 
-El proyecto tiene entrypoints separados para ejecutar dominios como servicios TCP independientes:
+El proyecto ejecuta los dominios principales como servicios TCP independientes:
 
 - gateway HTTP: `src/main.gateway.ts`
 - auth service TCP: `src/main.auth-service.ts`
 - users service TCP: `src/main.users-service.ts`
 - core service legacy: `src/main.microservice.ts`
+
+El gateway es la capa HTTP publica. Los controladores HTTP viven en:
+
+- `src/gateway/auth-gateway.controller.ts`
+- `src/gateway/users-gateway.controller.ts`
+
+Los servicios internos escuchan patrones RPC:
+
+- `src/auth/auth.message.controller.ts`
+- `src/users/users.message.controller.ts`
 
 El gateway enruta mensajes RPC hacia clientes separados:
 
@@ -111,14 +123,38 @@ El gateway enruta mensajes RPC hacia clientes separados:
 Los tokens de cliente estan en `src/contracts/service-clients.ts`.
 Los patrones RPC estan en `src/contracts/rpc-patterns.ts`.
 
-### Ejecutar en modo microservicios preparados
+### Comunicacion entre servicios
+
+`auth-service` ya no importa el modulo de usuarios para crear o consultar usuarios. Usa `src/auth/users-rpc.service.ts`, que llama al `users-service` por TCP/RPC.
+
+Flujo de registro:
+
+1. HTTP `POST /auth/register` llega al gateway.
+2. El gateway envia `auth.register` al `auth-service`.
+3. `auth-service` consulta/crea usuario enviando `users.findByEmailForAuth` y `users.create` al `users-service`.
+4. `auth-service` firma el JWT y responde al gateway.
+
+### Ejecutar en modo microservicios
 
 Usa tres terminales:
 
 ```bash
-npm run start:auth-ms:dev
 npm run start:users-ms:dev
+npm run start:auth-ms:dev
 npm run start:gateway:dev
+```
+
+Orden recomendado: primero `users-service`, luego `auth-service`, luego `gateway`.
+
+Los scripts `*:dev` usan `ts-node` para evitar que varios procesos de Nest compitan limpiando `dist` al mismo tiempo.
+
+Para ejecutar los servicios compilados:
+
+```bash
+npm run build
+npm run start:users-ms
+npm run start:auth-ms
+npm run start:gateway
 ```
 
 ### Ejecutar modo core legacy
@@ -136,13 +172,24 @@ Para evitar conflictos de puertos, no ejecutes `core-ms` y `auth-ms` al mismo ti
 
 ### Users Prisma
 
-El runtime de `users` usa cliente separado en `src/prisma/prisma.service.ts`.
+El runtime de `users-service` usa cliente separado en `src/prisma/prisma.service.ts`.
 
 ### Auth Prisma
 
 El runtime de `auth` ya tiene cliente separado preparado en `src/prisma/auth-prisma.service.ts`.
 
 Por ahora `auth` todavia no persiste sesiones reales; el cliente quedo listo para esa siguiente fase.
+
+### JWT
+
+JWT esta implementado en:
+
+- firma de token: `src/auth/auth.service.ts`
+- estrategia Passport: `src/auth/jwt.strategy.ts`
+- guard HTTP legacy: `src/auth/jwt-auth.guard.ts`
+- guard del gateway: `src/gateway/gateway-jwt-auth.guard.ts`
+
+En modo microservicios, el gateway valida el Bearer token y envia el usuario autenticado al servicio correspondiente por RPC.
 
 ## Verificacion
 
@@ -151,5 +198,6 @@ Comandos verificados localmente:
 ```bash
 npm run prisma:generate:all
 npm run prisma:migrate:status:all
+npx tsc --noEmit --incremental false
 npm run build
 ```

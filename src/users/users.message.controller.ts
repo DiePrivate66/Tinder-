@@ -26,6 +26,11 @@ export class UsersMessageController {
     return this.usersService.create(dto);
   }
 
+  @MessagePattern(RpcPatterns.users.findByEmailForAuth)
+  findByEmailForAuth(@Payload() email: string) {
+    return this.usersService.findByEmailForAuth(email);
+  }
+
   @MessagePattern(RpcPatterns.users.getById)
   getById(@Payload() id: number) {
     return this.usersService.findById(id);
