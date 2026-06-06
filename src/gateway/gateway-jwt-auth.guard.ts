@@ -31,7 +31,12 @@ export class GatewayJwtAuthGuard implements CanActivate {
 
     try {
       const payload = this.jwtService.verify<JwtPayload>(token, { secret });
-      req.user = { userId: payload.sub, email: payload.email };
+      req.user = {
+        userId: payload.sub,
+        email: payload.email,
+        roles: payload.roles ?? [],
+        permissions: payload.permissions ?? [],
+      };
       return true;
     } catch {
       throw new UnauthorizedException('Invalid token');

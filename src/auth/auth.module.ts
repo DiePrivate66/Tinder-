@@ -4,8 +4,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PassportModule } from '@nestjs/passport';
 import { ServiceClients } from '../contracts/service-clients';
+import { AuthPrismaService } from '../prisma/auth-prisma.service';
 import { AuthMessageController } from './auth.message.controller';
 import { AuthService } from './auth.service';
+import { AuthorizationService } from './authorization.service';
 import { JwtStrategy } from './jwt.strategy';
 import { UsersRpcService } from './users-rpc.service';
 
@@ -37,6 +39,12 @@ import { UsersRpcService } from './users-rpc.service';
     }),
   ],
   controllers: [AuthMessageController],
-  providers: [AuthService, JwtStrategy, UsersRpcService],
+  providers: [
+    AuthPrismaService,
+    AuthService,
+    AuthorizationService,
+    JwtStrategy,
+    UsersRpcService,
+  ],
 })
 export class AuthModule {}

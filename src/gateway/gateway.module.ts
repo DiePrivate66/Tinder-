@@ -6,6 +6,7 @@ import { ServiceClients } from '../contracts/service-clients';
 import { AuthGatewayController } from './auth-gateway.controller';
 import { CoreRpcService } from './core-rpc.service';
 import { GatewayJwtAuthGuard } from './gateway-jwt-auth.guard';
+import { GatewayPermissionsGuard } from './gateway-permissions.guard';
 import { UsersGatewayController } from './users-gateway.controller';
 
 @Module({
@@ -31,6 +32,6 @@ import { UsersGatewayController } from './users-gateway.controller';
     ]),
   ],
   controllers: [AuthGatewayController, UsersGatewayController],
-  providers: [GatewayJwtAuthGuard, CoreRpcService],
+  providers: [GatewayJwtAuthGuard, GatewayPermissionsGuard, CoreRpcService],
 })
 export class GatewayModule {}

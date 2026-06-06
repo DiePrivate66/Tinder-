@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthUser } from '../auth/interfaces/auth-user.interface';
+import { Permissions } from '../auth/rbac.constants';
 import { RpcPatterns } from '../contracts/rpc-patterns';
 import { AddPhotoDto } from '../users/dto/add-photo.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -18,11 +19,15 @@ import { SetInterestsDto } from '../users/dto/set-interests.dto';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 import { CoreRpcService } from './core-rpc.service';
 import { GatewayJwtAuthGuard } from './gateway-jwt-auth.guard';
+import { GatewayPermissionsGuard } from './gateway-permissions.guard';
+import { RequirePermissions } from './require-permissions.decorator';
 
 @Controller('users')
 export class UsersGatewayController {
   constructor(private readonly rpc: CoreRpcService) {}
 
+  @UseGuards(GatewayJwtAuthGuard, GatewayPermissionsGuard)
+  @RequirePermissions(Permissions.usersList)
   @Get()
   findAll() {
     return this.rpc.send(RpcPatterns.users.findAll, {});

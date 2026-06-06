@@ -6,6 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersRpcService } from './users-rpc.service';
+import { AuthorizationService } from './authorization.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthUser } from './interfaces/auth-user.interface';
@@ -15,6 +16,7 @@ import { JwtPayload } from './interfaces/jwt-payload.interface';
 export class AuthService {
   constructor(
     private readonly usersService: UsersRpcService,
+    private readonly authorizationService: AuthorizationService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -25,9 +27,12 @@ export class AuthService {
     }
 
     const user = await this.usersService.create(dto);
+    const authorization =
+      await this.authorizationService.getOrCreateUserAuthorization(user.id);
     const accessToken = await this.signToken({
       sub: user.id,
       email: user.email,
+      ...authorization,
     });
 
     return {
@@ -47,9 +52,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    const authorization =
+      await this.authorizationService.getOrCreateUserAuthorization(user.id);
     const accessToken = await this.signToken({
       sub: user.id,
       email: user.email,
+      ...authorization,
     });
 
     return {
