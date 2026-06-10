@@ -1,29 +1,18 @@
 import 'dotenv/config';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PassportModule } from '@nestjs/passport';
-import { ServiceClients } from '../contracts/service-clients';
 import { AuthPrismaService } from '../prisma/auth-prisma.service';
-import { AuthMessageController } from './auth.message.controller';
+import { UsersApplicationModule } from '../users/users-application.module';
+import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthorizationService } from './authorization.service';
 import { JwtStrategy } from './jwt.strategy';
-import { UsersRpcService } from './users-rpc.service';
 
 @Module({
   imports: [
     PassportModule,
-    ClientsModule.register([
-      {
-        name: ServiceClients.users,
-        transport: Transport.TCP,
-        options: {
-          host: process.env.USERS_SERVICE_HOST ?? '127.0.0.1',
-          port: Number(process.env.USERS_SERVICE_PORT ?? 4002),
-        },
-      },
-    ]),
+    UsersApplicationModule,
     JwtModule.registerAsync({
       useFactory: () => {
         const secret = process.env.JWT_SECRET;
@@ -38,13 +27,12 @@ import { UsersRpcService } from './users-rpc.service';
       },
     }),
   ],
-  controllers: [AuthMessageController],
+  controllers: [AuthController],
   providers: [
     AuthPrismaService,
     AuthService,
     AuthorizationService,
     JwtStrategy,
-    UsersRpcService,
   ],
 })
 export class AuthModule {}

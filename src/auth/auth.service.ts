@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UsersRpcService } from './users-rpc.service';
+import { UsersService } from '../users/users.service';
 import { AuthorizationService } from './authorization.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -15,7 +15,7 @@ import { JwtPayload } from './interfaces/jwt-payload.interface';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsersRpcService,
+    private readonly usersService: UsersService,
     private readonly authorizationService: AuthorizationService,
     private readonly jwtService: JwtService,
   ) {}

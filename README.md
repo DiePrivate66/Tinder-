@@ -1,38 +1,36 @@
 # Tinder Backend
 
-Backend NestJS con Prisma 7, organizado por dominios de datos con bases PostgreSQL fisicamente separadas y migrado a una base de arquitectura de microservicios TCP.
+Backend NestJS con Prisma 7 organizado como **monolito modular**. El proyecto separa dominios por modulos (`auth` y `users`), usa bases PostgreSQL fisicamente separadas y aplica arquitectura hexagonal ligera donde aporta claridad.
 
-## Estado de la entrega
+## Arquitectura
 
-Esta entrega incluye:
+La arquitectura principal es:
 
-- schemas Prisma separados por dominio
-- config Prisma separado por dominio
-- migraciones separadas por dominio
-- clientes Prisma generados por dominio
-- bases de datos fisicas separadas para `users` y `auth`
-- runtime Nest usando cliente Prisma separado para `users`
-- entrypoints separados para `auth-service`, `users-service` y `gateway`
-- gateway HTTP como unica entrada publica para `auth` y `users`
-- `auth-service` comunicandose con `users-service` por RPC, sin importar directamente la capa de usuarios
+- **Monolito modular**: una sola aplicacion NestJS arrancada desde `src/main.ts`.
+- **Modulos por dominio**: `AuthModule` y `UsersModule`.
+- **Hexagonal ligera como apoyo interno**: el dominio `users` separa contrato de repositorio, implementacion Prisma e infraestructura.
+- **Persistencia separada**: cada dominio tiene su propia base, schema Prisma, config Prisma, migraciones y cliente generado.
 
-No incluye todavia:
-
-- persistencia real de sesiones en login/logout
-- refresh tokens
-- revocacion de sesiones por dispositivo
-- despliegue independiente por servicio en servidores separados
-
-## Estructura Prisma
+No se usa microservicios como arquitectura principal.
 
 ## Bases de datos
 
 El proyecto usa 2 bases de datos fisicas PostgreSQL:
 
-- `tinder_users_db`: dominio `users`
-- `tinder_auth_db`: dominio `auth`
+- `tinder_users_db`: usuarios, perfiles, fotos e intereses.
+- `tinder_auth_db`: sesiones, dispositivos, roles, permisos y RBAC.
 
-`DATABASE_URL` queda como fallback legacy, pero el runtime y Prisma usan las variables especificas de cada dominio.
+`DATABASE_URL` queda como fallback legacy, pero el runtime usa las variables especificas de cada dominio.
+
+```env
+DATABASE_URL="postgresql://postgres:Andres123@localhost:5432/tinder_db"
+USERS_DATABASE_URL="postgresql://postgres:Andres123@localhost:5432/tinder_users_db"
+AUTH_DATABASE_URL="postgresql://postgres:Andres123@localhost:5432/tinder_auth_db"
+JWT_SECRET="change_this_for_a_long_random_secret"
+PORT=3000
+```
+
+## Estructura Prisma
 
 ### Dominio `users`
 
@@ -48,32 +46,7 @@ El proyecto usa 2 bases de datos fisicas PostgreSQL:
 - migraciones: `prisma/auth/migrations`
 - cliente generado: `generated/prisma/auth`
 
-## Variables de entorno
-
-```env
-DATABASE_URL="postgresql://postgres:Andres123@localhost:5432/tinder_db"
-USERS_DATABASE_URL="postgresql://postgres:Andres123@localhost:5432/tinder_users_db"
-AUTH_DATABASE_URL="postgresql://postgres:Andres123@localhost:5432/tinder_auth_db"
-JWT_SECRET="change_this_for_a_long_random_secret"
-GATEWAY_PORT=3000
-AUTH_SERVICE_HOST=127.0.0.1
-AUTH_SERVICE_PORT=4001
-USERS_SERVICE_HOST=127.0.0.1
-USERS_SERVICE_PORT=4002
-```
-
-## Migraciones por esquema
-
-### Users
-
-- `20260406133636_init`
-- `20260422012816_user_profile_core`
-
-### Auth
-
-- `20260518000100_init_auth`
-
-## Comandos Prisma
+## Comandos
 
 ### Crear bases fisicas
 
@@ -81,19 +54,12 @@ USERS_SERVICE_PORT=4002
 npm run db:create
 ```
 
-### Generar clientes
+### Generar clientes Prisma
 
 ```bash
 npm run prisma:generate:users
 npm run prisma:generate:auth
 npm run prisma:generate:all
-```
-
-### Migraciones de desarrollo
-
-```bash
-npm run prisma:migrate:dev:users
-npm run prisma:migrate:dev:auth
 ```
 
 ### Aplicar migraciones
@@ -112,109 +78,85 @@ npm run prisma:migrate:status:auth
 npm run prisma:migrate:status:all
 ```
 
-## Arquitectura de microservicios
-
-El proyecto ejecuta los dominios principales como servicios TCP independientes:
-
-- gateway HTTP: `src/main.gateway.ts`
-- auth service TCP: `src/main.auth-service.ts`
-- users service TCP: `src/main.users-service.ts`
-- core service legacy: `src/main.microservice.ts`
-
-El gateway es la capa HTTP publica. Los controladores HTTP viven en:
-
-- `src/gateway/auth-gateway.controller.ts`
-- `src/gateway/users-gateway.controller.ts`
-
-Los servicios internos escuchan patrones RPC:
-
-- `src/auth/auth.message.controller.ts`
-- `src/users/users.message.controller.ts`
-
-El gateway enruta mensajes RPC hacia clientes separados:
-
-- `auth.*` -> `AUTH_SERVICE_CLIENT`
-- `users.*` -> `USERS_SERVICE_CLIENT`
-
-Los tokens de cliente estan en `src/contracts/service-clients.ts`.
-Los patrones RPC estan en `src/contracts/rpc-patterns.ts`.
-
-### Comunicacion entre servicios
-
-`auth-service` ya no importa el modulo de usuarios para crear o consultar usuarios. Usa `src/auth/users-rpc.service.ts`, que llama al `users-service` por TCP/RPC.
-
-Flujo de registro:
-
-1. HTTP `POST /auth/register` llega al gateway.
-2. El gateway envia `auth.register` al `auth-service`.
-3. `auth-service` consulta/crea usuario enviando `users.findByEmailForAuth` y `users.create` al `users-service`.
-4. `auth-service` firma el JWT y responde al gateway.
-
-### Ejecutar en modo microservicios
-
-Usa tres terminales:
+### Ejecutar el monolito
 
 ```bash
-npm run start:users-ms:dev
-npm run start:auth-ms:dev
-npm run start:gateway:dev
+npm run start:dev
 ```
 
-Orden recomendado: primero `users-service`, luego `auth-service`, luego `gateway`.
+La API HTTP queda en:
 
-Los scripts `*:dev` usan `ts-node` para evitar que varios procesos de Nest compitan limpiando `dist` al mismo tiempo.
+```text
+http://localhost:3000
+```
 
-Para ejecutar los servicios compilados:
+## Modulos NestJS
+
+### Auth
+
+Responsabilidades:
+
+- registro
+- login
+- emision de JWT
+- validacion de JWT
+- RBAC con roles y permisos
+
+Archivos principales:
+
+- `src/auth/auth.module.ts`
+- `src/auth/auth.controller.ts`
+- `src/auth/auth.service.ts`
+- `src/auth/authorization.service.ts`
+- `src/prisma/auth-prisma.service.ts`
+
+### Users
+
+Responsabilidades:
+
+- usuarios
+- perfil
+- fotos
+- intereses
+
+Estructura con hexagonal ligera:
+
+- `src/users/domain`: tipos y contrato del repositorio.
+- `src/users/infrastructure`: implementacion Prisma del repositorio.
+- `src/users/users.service.ts`: logica de aplicacion.
+- `src/users/users.controller.ts`: endpoints HTTP.
+
+## RBAC
+
+RBAC significa control de acceso basado en roles.
+
+Roles iniciales:
+
+- `USER`
+- `ADMIN`
+
+Permiso inicial:
+
+- `users.list`
+
+`GET /users` requiere JWT valido y permiso `users.list`. Un usuario normal recibe `403 Forbidden`; un admin recibe `200 OK`.
+
+Para promover un usuario existente a admin:
 
 ```bash
-npm run build
-npm run start:users-ms
-npm run start:auth-ms
-npm run start:gateway
+npm run rbac:seed-admin -- correo@example.com
 ```
 
-### Ejecutar modo core legacy
-
-El entrypoint anterior sigue disponible para pruebas con un solo microservicio central:
-
-```bash
-npm run start:core-ms:dev
-npm run start:gateway:dev
-```
-
-Para evitar conflictos de puertos, no ejecutes `core-ms` y `auth-ms` al mismo tiempo si ambos usan el puerto `4001`.
-
-## Runtime actual
-
-### Users Prisma
-
-El runtime de `users-service` usa cliente separado en `src/prisma/prisma.service.ts`.
-
-### Auth Prisma
-
-El runtime de `auth` ya tiene cliente separado preparado en `src/prisma/auth-prisma.service.ts`.
-
-Por ahora `auth` todavia no persiste sesiones reales; el cliente quedo listo para esa siguiente fase.
-
-### JWT
-
-JWT esta implementado en:
-
-- firma de token: `src/auth/auth.service.ts`
-- estrategia Passport: `src/auth/jwt.strategy.ts`
-- guard HTTP legacy: `src/auth/jwt-auth.guard.ts`
-- guard del gateway: `src/gateway/gateway-jwt-auth.guard.ts`
-
-En modo microservicios, el gateway valida el Bearer token y envia el usuario autenticado al servicio correspondiente por RPC.
+Despues de promoverlo, debe iniciar sesion otra vez para recibir un JWT actualizado.
 
 ## Verificacion
 
-Comandos verificados localmente:
+Comandos usados para validar:
 
 ```bash
-npm run prisma:generate:all
 npm run db:create
-npm run prisma:migrate:status:all
+npm run prisma:migrate:deploy:all
+npm run prisma:generate:all
 npx tsc --noEmit --incremental false
 npm run build
 ```

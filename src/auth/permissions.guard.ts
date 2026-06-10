@@ -6,13 +6,13 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import type { AuthUser } from '../auth/interfaces/auth-user.interface';
+import type { AuthUser } from './interfaces/auth-user.interface';
 import { REQUIRED_PERMISSIONS_KEY } from './require-permissions.decorator';
 
 type AuthenticatedRequest = Request & { user?: AuthUser };
 
 @Injectable()
-export class GatewayPermissionsGuard implements CanActivate {
+export class PermissionsGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {

@@ -11,9 +11,11 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { Permissions } from '../auth/rbac.constants';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import type { AuthUser } from '../auth/interfaces/auth-user.interface';
 import { AddPhotoDto } from './dto/add-photo.dto';
-import { CreateUserDto } from './dto/create-user.dto';
 import { SetInterestsDto } from './dto/set-interests.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UsersService } from './users.service';
@@ -22,14 +24,11 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions(Permissions.usersList)
   @Get()
   findAll() {
     return this.usersService.findAll();
-  }
-
-  @Post()
-  create(@Body() dto: CreateUserDto) {
-    return this.usersService.create(dto);
   }
 
   @UseGuards(JwtAuthGuard)
