@@ -1,6 +1,6 @@
 # Tinder Backend
 
-Backend NestJS con Prisma 7, organizado por dominios de datos separados y migrado a una base de arquitectura de microservicios TCP.
+Backend NestJS con Prisma 7, organizado por dominios de datos con bases PostgreSQL fisicamente separadas y migrado a una base de arquitectura de microservicios TCP.
 
 ## Estado de la entrega
 
@@ -10,6 +10,7 @@ Esta entrega incluye:
 - config Prisma separado por dominio
 - migraciones separadas por dominio
 - clientes Prisma generados por dominio
+- bases de datos fisicas separadas para `users` y `auth`
 - runtime Nest usando cliente Prisma separado para `users`
 - entrypoints separados para `auth-service`, `users-service` y `gateway`
 - gateway HTTP como unica entrada publica para `auth` y `users`
@@ -23,6 +24,15 @@ No incluye todavia:
 - despliegue independiente por servicio en servidores separados
 
 ## Estructura Prisma
+
+## Bases de datos
+
+El proyecto usa 2 bases de datos fisicas PostgreSQL:
+
+- `tinder_users_db`: dominio `users`
+- `tinder_auth_db`: dominio `auth`
+
+`DATABASE_URL` queda como fallback legacy, pero el runtime y Prisma usan las variables especificas de cada dominio.
 
 ### Dominio `users`
 
@@ -42,8 +52,8 @@ No incluye todavia:
 
 ```env
 DATABASE_URL="postgresql://postgres:Andres123@localhost:5432/tinder_db"
-USERS_DATABASE_URL="postgresql://postgres:Andres123@localhost:5432/tinder_db?schema=public"
-AUTH_DATABASE_URL="postgresql://postgres:Andres123@localhost:5432/tinder_db?schema=auth"
+USERS_DATABASE_URL="postgresql://postgres:Andres123@localhost:5432/tinder_users_db"
+AUTH_DATABASE_URL="postgresql://postgres:Andres123@localhost:5432/tinder_auth_db"
 JWT_SECRET="change_this_for_a_long_random_secret"
 GATEWAY_PORT=3000
 AUTH_SERVICE_HOST=127.0.0.1
@@ -64,6 +74,12 @@ USERS_SERVICE_PORT=4002
 - `20260518000100_init_auth`
 
 ## Comandos Prisma
+
+### Crear bases fisicas
+
+```bash
+npm run db:create
+```
 
 ### Generar clientes
 
@@ -197,6 +213,7 @@ Comandos verificados localmente:
 
 ```bash
 npm run prisma:generate:all
+npm run db:create
 npm run prisma:migrate:status:all
 npx tsc --noEmit --incremental false
 npm run build

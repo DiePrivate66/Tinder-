@@ -33,6 +33,7 @@
     "prisma:migrate:status:users": "prisma migrate status --config prisma/users/prisma.config.ts",
     "prisma:migrate:status:auth": "prisma migrate status --config prisma/auth/prisma.config.ts",
     "prisma:migrate:status:all": "npm run prisma:migrate:status:users && npm run prisma:migrate:status:auth",
+    "db:create": "ts-node -r tsconfig-paths/register scripts/create-databases.ts",
     "rbac:seed-admin": "ts-node -r tsconfig-paths/register scripts/seed-admin.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
