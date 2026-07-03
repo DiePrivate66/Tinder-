@@ -1,9 +1,10 @@
 import 'dotenv/config';
 import { Client } from 'pg';
+import { getServiceDatabaseEnv, listServiceKeys } from '../src/contracts/service-registry';
 
-const DATABASE_ENV_KEYS = ['USERS_DATABASE_URL', 'AUTH_DATABASE_URL'] as const;
+const DATABASE_ENV_KEYS = listServiceKeys().map(getServiceDatabaseEnv);
 
-function getDatabaseUrl(envKey: (typeof DATABASE_ENV_KEYS)[number]): URL {
+function getDatabaseUrl(envKey: string): URL {
   const rawUrl = process.env[envKey];
   if (!rawUrl) {
     throw new Error(`${envKey} is required.`);
