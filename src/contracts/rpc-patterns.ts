@@ -15,4 +15,9 @@ export const RpcPatterns = {
     removeMyPhoto: 'users.removeMyPhoto',
     setMyInterests: 'users.setMyInterests',
   },
+  match: {
+    health: 'match.health',
+    create: 'match.create',
+    listByUserId: 'match.listByUserId',
+  },
 } as const;

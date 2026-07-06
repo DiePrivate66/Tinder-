@@ -32,6 +32,16 @@ export const ServiceRegistry = {
     defaultHost: '127.0.0.1',
     defaultPort: 4002,
   },
+  match: {
+    serviceKey: 'match',
+    rpcPrefix: 'match',
+    clientToken: 'MATCH_SERVICE_CLIENT',
+    databaseUrlEnv: 'MATCH_DATABASE_URL',
+    hostEnv: 'MATCH_SERVICE_HOST',
+    portEnv: 'MATCH_SERVICE_PORT',
+    defaultHost: '127.0.0.1',
+    defaultPort: 4003,
+  },
 } as const satisfies Record<string, ServiceDefinition>;
 
 export type ServiceKey = keyof typeof ServiceRegistry;
