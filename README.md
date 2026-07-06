@@ -156,7 +156,12 @@ Esto deja preparado el crecimiento para un futuro `chat-ms` u otro servicio sin 
 
 ### Chat
 
-`chat-service` por ahora es **RPC-only**. Contiene conversaciones directas y un modulo interno de `messages`.
+- `GET /chats`
+- `POST /chats`
+- `GET /chats/:conversationId/messages`
+- `POST /chats/:conversationId/messages`
+
+`chat-service` sigue conteniendo conversaciones directas y un modulo interno de `messages`, pero ahora ya queda expuesto por HTTP desde el gateway.
 
 ## RBAC
 

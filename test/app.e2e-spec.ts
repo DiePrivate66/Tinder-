@@ -22,6 +22,18 @@ describe('Gateway (e2e)', () => {
       .expect(401);
   });
 
+  it('/chats (GET) without token returns 401 before hitting RPC', () => {
+    return request(app.getHttpServer())
+      .get('/chats')
+      .expect(401);
+  });
+
+  it('/chats/:conversationId/messages (GET) without token returns 401 before hitting RPC', () => {
+    return request(app.getHttpServer())
+      .get('/chats/1/messages')
+      .expect(401);
+  });
+
   afterEach(async () => {
     await app.close();
   });

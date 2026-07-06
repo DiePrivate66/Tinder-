@@ -89,4 +89,51 @@ describe('MessagesService', () => {
       status: MessageStatus.SENT,
     });
   });
+
+  it('rejects listing messages when the user is not part of the conversation', async () => {
+    chatConversationDelegate.findUnique.mockResolvedValue({
+      id: 1,
+      participantOneId: 2,
+      participantTwoId: 5,
+    });
+
+    await expect(service.listMessagesByConversation(99, 1)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('lists messages when the user belongs to the conversation', async () => {
+    chatConversationDelegate.findUnique.mockResolvedValue({
+      id: 1,
+      participantOneId: 2,
+      participantTwoId: 5,
+    });
+    chatMessageDelegate.findMany.mockResolvedValue([
+      {
+        id: 10,
+        conversationId: 1,
+        senderUserId: 2,
+        body: 'Hola',
+        messageType: MessageType.TEXT,
+        status: MessageStatus.SENT,
+        createdAt: new Date('2026-07-06T00:00:00.000Z'),
+        updatedAt: new Date('2026-07-06T00:00:00.000Z'),
+      },
+    ]);
+
+    const result = await service.listMessagesByConversation(2, 1);
+
+    expect(chatMessageDelegate.findMany).toHaveBeenCalledWith({
+      where: {
+        conversationId: 1,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+    expect(result[0]).toMatchObject({
+      id: 10,
+      body: 'Hola',
+    });
+  });
 });

@@ -19,24 +19,7 @@ export class MessagesService {
   constructor(private readonly prisma: ChatPrismaService) {}
 
   async sendMessage(dto: SendMessageDto): Promise<ChatMessageView> {
-    const conversation = await this.prisma.chatConversation.findUnique({
-      where: {
-        id: dto.conversationId,
-      },
-    });
-
-    if (!conversation) {
-      throw new NotFoundException('Conversation not found.');
-    }
-
-    if (
-      dto.senderUserId !== conversation.participantOneId &&
-      dto.senderUserId !== conversation.participantTwoId
-    ) {
-      throw new ForbiddenException(
-        'Sender does not belong to this conversation.',
-      );
-    }
+    await this.assertConversationParticipant(dto.conversationId, dto.senderUserId);
 
     const message = await this.prisma.chatMessage.create({
       data: {
@@ -50,8 +33,11 @@ export class MessagesService {
   }
 
   async listMessagesByConversation(
+    userId: number,
     conversationId: number,
   ): Promise<ChatMessageView[]> {
+    await this.assertConversationParticipant(conversationId, userId);
+
     const messages = await this.prisma.chatMessage.findMany({
       where: {
         conversationId,
@@ -62,6 +48,30 @@ export class MessagesService {
     });
 
     return messages.map((message) => this.toMessageView(message));
+  }
+
+  private async assertConversationParticipant(
+    conversationId: number,
+    userId: number,
+  ): Promise<void> {
+    const conversation = await this.prisma.chatConversation.findUnique({
+      where: {
+        id: conversationId,
+      },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found.');
+    }
+
+    if (
+      userId !== conversation.participantOneId &&
+      userId !== conversation.participantTwoId
+    ) {
+      throw new ForbiddenException(
+        'User does not belong to this conversation.',
+      );
+    }
   }
 
   private toMessageView(message: ChatMessage): ChatMessageView {
