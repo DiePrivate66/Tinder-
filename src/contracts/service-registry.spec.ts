@@ -9,7 +9,7 @@ import {
 
 describe('ServiceRegistry', () => {
   it('lists the registered microservices', () => {
-    expect(listServiceKeys()).toEqual(['auth', 'users', 'match']);
+    expect(listServiceKeys()).toEqual(['auth', 'users', 'match', 'chat']);
   });
 
   it('resolves client tokens and rpc prefixes from one registry', () => {
@@ -17,6 +17,7 @@ describe('ServiceRegistry', () => {
     expect(getServiceKeyForRpcPattern('users.findAll')).toBe('users');
     expect(getServiceKeyForRpcPattern('auth.login')).toBe('auth');
     expect(getServiceKeyForRpcPattern('match.health')).toBe('match');
+    expect(getServiceKeyForRpcPattern('chat.health')).toBe('chat');
   });
 
   it('builds tcp client registrations from registry metadata', () => {
@@ -24,9 +25,10 @@ describe('ServiceRegistry', () => {
       'auth',
       'users',
       'match',
+      'chat',
     ]);
 
-    expect(registrations).toHaveLength(3);
+    expect(registrations).toHaveLength(4);
     expect(registrations[0]?.name).toBe(ServiceRegistry.auth.clientToken);
     expect(getServiceTcpOptions('users')).toEqual({
       host: ServiceRegistry.users.defaultHost,
@@ -35,6 +37,10 @@ describe('ServiceRegistry', () => {
     expect(getServiceTcpOptions('match')).toEqual({
       host: ServiceRegistry.match.defaultHost,
       port: ServiceRegistry.match.defaultPort,
+    });
+    expect(getServiceTcpOptions('chat')).toEqual({
+      host: ServiceRegistry.chat.defaultHost,
+      port: ServiceRegistry.chat.defaultPort,
     });
   });
 });

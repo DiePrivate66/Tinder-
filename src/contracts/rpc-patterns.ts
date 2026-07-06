@@ -20,4 +20,11 @@ export const RpcPatterns = {
     create: 'match.create',
     listByUserId: 'match.listByUserId',
   },
+  chat: {
+    health: 'chat.health',
+    createConversation: 'chat.createConversation',
+    listConversationsByUserId: 'chat.listConversationsByUserId',
+    sendMessage: 'chat.sendMessage',
+    listMessagesByConversation: 'chat.listMessagesByConversation',
+  },
 } as const;

@@ -42,6 +42,16 @@ export const ServiceRegistry = {
     defaultHost: '127.0.0.1',
     defaultPort: 4003,
   },
+  chat: {
+    serviceKey: 'chat',
+    rpcPrefix: 'chat',
+    clientToken: 'CHAT_SERVICE_CLIENT',
+    databaseUrlEnv: 'CHAT_DATABASE_URL',
+    hostEnv: 'CHAT_SERVICE_HOST',
+    portEnv: 'CHAT_SERVICE_PORT',
+    defaultHost: '127.0.0.1',
+    defaultPort: 4004,
+  },
 } as const satisfies Record<string, ServiceDefinition>;
 
 export type ServiceKey = keyof typeof ServiceRegistry;
