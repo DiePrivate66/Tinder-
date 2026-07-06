@@ -11,6 +11,7 @@ import { ChatsGatewayController } from './chats-gateway.controller';
 import { CoreRpcService } from './core-rpc.service';
 import { GatewayJwtAuthGuard } from './gateway-jwt-auth.guard';
 import { GatewayPermissionsGuard } from './gateway-permissions.guard';
+import { MatchesGatewayController } from './matches-gateway.controller';
 import { UsersGatewayController } from './users-gateway.controller';
 
 @Module({
@@ -22,6 +23,7 @@ import { UsersGatewayController } from './users-gateway.controller';
     AuthGatewayController,
     UsersGatewayController,
     ChatsGatewayController,
+    MatchesGatewayController,
   ],
   providers: [CoreRpcService, GatewayJwtAuthGuard, GatewayPermissionsGuard],
 })

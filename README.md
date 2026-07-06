@@ -152,7 +152,10 @@ Esto deja preparado el crecimiento para un futuro `chat-ms` u otro servicio sin 
 
 ### Match
 
-`match-service` por ahora es **RPC-only**. No tiene endpoints HTTP publicos en el gateway todavia.
+- `GET /matches`
+- `POST /matches`
+
+`match-service` ya queda expuesto por HTTP desde el gateway para consultar y crear matches del usuario autenticado.
 
 ### Chat
 

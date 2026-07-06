@@ -4,6 +4,11 @@ import { RpcPatterns } from '../contracts/rpc-patterns';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { MatchService } from './match.service';
 
+interface WithUserId<TDto = undefined> {
+  userId: number;
+  dto?: TDto;
+}
+
 @Controller()
 export class MatchMessageController {
   constructor(private readonly matchService: MatchService) {}
@@ -14,7 +19,17 @@ export class MatchMessageController {
   }
 
   @MessagePattern(RpcPatterns.match.create)
-  create(@Payload() dto: CreateMatchDto) {
+  create(@Payload() payload: WithUserId<{ counterpartUserId: number }>) {
+    const counterpartUserId = payload.dto?.counterpartUserId;
+    if (counterpartUserId === undefined) {
+      throw new Error('counterpartUserId is required');
+    }
+
+    const dto: CreateMatchDto = {
+      userAId: payload.userId,
+      userBId: counterpartUserId,
+    };
+
     return this.matchService.createMatch(dto);
   }
 
