@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AuthDevice {
+  id                Int           @id @default(autoincrement())
+  userId            Int
+  deviceFingerprint String
+  platform          String?
+  appVersion        String?
+  lastLoginAt       DateTime?
+  sessions          UserSession[]
+  createdAt         DateTime      @default(now())
+
+  @@unique([userId, deviceFingerprint])
+  @@index([userId])
+}
+
+model UserSession {
+  id               Int         @id @default(autoincrement())
+  userId           Int
+  authDeviceId     Int?
+  refreshTokenHash String      @unique
+  ipAddress        String?
+  userAgent        String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime    @default(now())
+  authDevice       AuthDevice? @relation(fields: [authDeviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId, expiresAt])
+  @@index([authDeviceId])
+}
+
+model Role {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  users       UserRole[]
+  permissions RolePermission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model Permission {
+  id        Int              @id @default(autoincrement())
+  name      String           @unique
+  roles     RolePermission[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model UserRole {
+  userId     Int
+  roleId     Int
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@id([userId, roleId])
+  @@index([userId])
+}
+
+model RolePermission {
+  roleId       Int
+  permissionId Int
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  assignedAt   DateTime   @default(now())
+
+  @@id([roleId, permissionId])
+}

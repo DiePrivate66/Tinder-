@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MatchStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model Match {
+  id        Int         @id @default(autoincrement())
+  userOneId Int
+  userTwoId Int
+  status    MatchStatus @default(ACTIVE)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([userOneId, userTwoId])
+  @@index([userOneId])
+  @@index([userTwoId])
+  @@index([status])
+}
